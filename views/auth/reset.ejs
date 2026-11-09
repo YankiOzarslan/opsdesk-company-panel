@@ -1,0 +1,35 @@
+<%- include('../partials/head') %>
+<body class="login-body">
+  <main class="login-card card shadow-sm">
+    <div class="card-body p-4 p-md-5">
+      <div class="text-center mb-4">
+        <span class="brand-mark brand-mark-lg"><i class="bi bi-grid-1x2-fill"></i></span>
+        <h1 class="h4 mt-3 mb-1"><%= purpose === 'invite' ? 'Parolanı belirle' : 'Yeni parola' %></h1>
+        <% if (email) { %><p class="text-secondary small mb-0"><%= email %></p><% } %>
+      </div>
+      <% if (invalid) { %>
+        <div class="alert alert-warning py-2">Bu bağlantı geçersiz, kullanılmış veya süresi dolmuş. Yeni bir bağlantı isteyebilirsin.</div>
+        <a class="btn btn-primary w-100" href="/forgot-password">Yeni bağlantı iste</a>
+      <% } else { %>
+        <% if (error) { %><div class="alert alert-danger py-2"><%= error %></div><% } %>
+        <form method="post" action="/reset-password/<%= token %>" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="email" name="username" value="<%= email %>" autocomplete="username" hidden>
+          <div class="mb-3">
+            <label class="form-label" for="password">Yeni parola</label>
+            <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="10" required autofocus>
+            <div class="form-text">En az 10 karakter.</div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="password_confirm">Yeni parola (tekrar)</label>
+            <input class="form-control" id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" required>
+          </div>
+          <button class="btn btn-primary w-100" type="submit"><i class="bi bi-check-lg me-1"></i>Parolayı kaydet</button>
+        </form>
+      <% } %>
+      <div class="text-center mt-3"><a class="small" href="/login"><i class="bi bi-arrow-left me-1"></i>Girişe dön</a></div>
+    </div>
+  </main>
+<script src="/static/js/access.js"></script>
+</body>
+</html>
