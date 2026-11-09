@@ -1,0 +1,40 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+      <li class="breadcrumb-item"><a href="/domains">Domainler</a></li>
+      <li class="breadcrumb-item"><a href="/domains/<%= parent.id %>"><%= parent.name %></a></li>
+      <li class="breadcrumb-item active" aria-current="page">Yeni alt domain</li>
+    </ol></nav>
+    <h1><i class="bi bi-diagram-3"></i>Alt domain ekle</h1>
+    <p class="mb-0">Yeni adresi ana domaine bağlayın; proje, SSL ve iletişim bilgilerini birlikte takip edin.</p>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+    <form method="post" action="/domains/<%= parent.id %>/subdomains" data-draft-form novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <section class="card"><div class="card-body p-4">
+        <h2 class="form-section-title"><span class="form-section-num">1</span>Alt domain bilgileri</h2>
+        <% if (Object.keys(errors).length) { %><div class="alert alert-danger" role="alert">İşaretli alanları kontrol edip tekrar deneyin.</div><% } %>
+        <label class="form-label" for="subdomain-label">Alt domain adı <span class="text-danger">*</span></label>
+        <div class="input-group flex-wrap">
+          <input class="form-control <%= errors.label ? 'is-invalid' : '' %>" id="subdomain-label" name="label" value="<%= values.label || '' %>" placeholder="panel" maxlength="253" autocomplete="off" autocapitalize="none" spellcheck="false" data-subdomain-parent="<%= parent.name %>" aria-describedby="subdomain-help<%= errors.label ? ' subdomain-error' : '' %>" required>
+          <span class="input-group-text text-break mw-100 text-wrap">.<%= parent.name %></span>
+        </div>
+        <% if (errors.label) { %><div class="invalid-feedback d-block" id="subdomain-error"><%= errors.label %></div><% } %>
+        <div class="form-text mb-4" id="subdomain-help">Yalnızca ön eki yazın: panel, api veya test.api. Tam adres otomatik oluşturulur.</div>
+        <div class="rounded border p-3 mb-4 bg-light"><span class="small text-secondary d-block mb-2">Oluşturulacak adres</span><strong id="subdomain-preview" class="text-break"><%= values.label || 'panel' %>.<%= parent.name %></strong></div>
+        <div class="mb-4"><label class="form-label" for="subdomain-status">Durum</label><select id="subdomain-status" name="status" class="form-select <%= errors.status ? 'is-invalid' : '' %>"><% for (const option of entities.domains.fieldMap.status.options) { %><option value="<%= option.value %>" <%= (values.status || 'active') === option.value ? 'selected' : '' %>><%= option.label %></option><% } %></select><% if (errors.status) { %><div class="invalid-feedback"><%= errors.status %></div><% } %></div>
+        <div><label class="form-label" for="subdomain-notes">Notlar</label><textarea class="form-control <%= errors.notes ? 'is-invalid' : '' %>" id="subdomain-notes" name="notes" rows="3" maxlength="10000" placeholder="Kullanım amacı, yönlendirme veya ekibiniz için notlar…"><%= values.notes || '' %></textarea><% if(errors.notes) { %><div class="invalid-feedback"><%= errors.notes %></div><% } %></div>
+      </div></section>
+      <div class="form-actions"><a class="btn btn-outline-secondary" href="/domains/<%= parent.id %>">Vazgeç</a><button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Alt domain oluştur</button></div>
+    </form>
+  </div>
+  <aside class="col-12 col-lg-4"><div class="card"><div class="card-body p-4">
+    <div class="eyebrow">BAĞLI OLDUĞU DOMAIN</div><a class="fw-semibold text-break" href="/domains/<%= parent.id %>"><i class="bi bi-globe2 me-2"></i><%= parent.name %></a>
+    <hr><h2 class="h6">Kaydettikten sonra</h2><p class="small text-secondary">Alt domaini projelerinizde seçebilir, SSL bilgilerini ve notlarını kendi detay sayfasından düzenleyebilirsiniz.</p>
+    <p class="small text-secondary mb-0">Bu işlem panelde kayıt oluşturur. Adresi yayına almak için DNS sağlayıcınızda ilgili A veya CNAME kaydını da ekleyin.</p>
+  </div></div></aside>
+</div>
+<%- include('../partials/footer') %>
