@@ -1,0 +1,22 @@
+<div class="col-12 col-sm-6 col-xl-4">
+  <div class="card person-card h-100">
+    <div class="card-body">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="avatar"><%= h.initials(r.name) %></span>
+        <div class="min-w-0">
+          <a class="stretched-link-off fw-semibold d-block text-truncate" href="/contacts/<%= r.id %>"><%= r.name %></a>
+          <div class="small text-secondary text-truncate"><%= [r.role, r.company].filter(Boolean).join(' · ') || '—' %></div>
+        </div>
+      </div>
+      <ul class="contact-lines">
+        <%- include('../partials/contact-line', { icon: 'bi-envelope', value: r.email, href: r.email ? 'mailto:' + r.email : null }) %>
+        <%- include('../partials/contact-line', { icon: 'bi-telephone', value: r.phone, href: r.phone ? 'tel:' + r.phone.replace(/[^\d+]/g, '') : null }) %>
+      </ul>
+      <% if (r.notes) { %><p class="small text-secondary mb-0 clamp-2"><%= r.notes %></p><% } %>
+    </div>
+    <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
+      <a class="btn btn-sm btn-outline-secondary" href="/contacts/<%= r.id %>">Detay</a>
+      <a class="btn btn-sm btn-outline-primary" href="/contacts/<%= r.id %>/edit"><i class="bi bi-pencil"></i></a>
+    </div>
+  </div>
+</div>

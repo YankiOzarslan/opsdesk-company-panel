@@ -1,0 +1,34 @@
+<%
+  const groups = [
+    { title: 'Yetkili', icon: 'bi-person-badge', name: r.contact_name, sub: r.contact_title, email: r.email, phone: r.phone },
+    { title: 'IT', icon: 'bi-tools', name: r.it_contact_name, email: r.it_contact_email, phone: r.it_contact_phone },
+    { title: 'Yönetim', icon: 'bi-building', name: r.management_contact_name, email: r.management_contact_email, phone: r.management_contact_phone },
+  ].filter((g) => g.name || g.email || g.phone);
+%>
+<div class="col-12 col-md-6 col-xxl-4">
+  <div class="card person-card h-100">
+    <div class="card-body">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="avatar avatar-client"><%= h.initials(r.name) %></span>
+        <div class="min-w-0">
+          <a class="fw-semibold d-block text-truncate" href="/clients/<%= r.id %>"><%= r.name %></a>
+          <div class="small text-secondary"><%= groups.length %> irtibat</div>
+        </div>
+      </div>
+      <% if (!groups.length) { %><p class="small text-body-tertiary mb-0">İletişim bilgisi girilmemiş.</p><% } %>
+      <% for (const g of groups) { %>
+        <div class="client-group">
+          <div class="client-group-title"><i class="bi <%= g.icon %>"></i><%= g.title %><% if (g.name) { %>: <strong><%= g.name %></strong><% } %><% if (g.sub) { %> <span class="text-secondary">(<%= g.sub %>)</span><% } %></div>
+          <ul class="contact-lines">
+            <%- include('../partials/contact-line', { icon: 'bi-envelope', value: g.email, href: g.email ? 'mailto:' + g.email : null }) %>
+            <%- include('../partials/contact-line', { icon: 'bi-telephone', value: g.phone, href: g.phone ? 'tel:' + g.phone.replace(/[^\d+]/g, '') : null }) %>
+          </ul>
+        </div>
+      <% } %>
+    </div>
+    <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
+      <a class="btn btn-sm btn-outline-secondary" href="/clients/<%= r.id %>">Detay</a>
+      <a class="btn btn-sm btn-outline-primary" href="/clients/<%= r.id %>/edit"><i class="bi bi-pencil"></i></a>
+    </div>
+  </div>
+</div>
