@@ -1,0 +1,42 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <h1 class="h3 mb-0"><i class="bi bi-person-gear me-2 text-primary"></i>Kullanıcılar</h1>
+    <div class="small text-secondary"><%= rows.length %> kullanıcı · panele e-posta ve parolayla giriş yapanlar</div>
+  </div>
+  <a class="btn btn-primary" href="/users/new"><i class="bi bi-plus-lg me-1"></i>Yeni kullanıcı</a>
+</div>
+<div class="beginner-note"><i class="bi bi-people" aria-hidden="true"></i><div><strong>Şirket ekibinizi buradan yönetin.</strong><p>Yeni kullanıcı için ad, e-posta ve başlangıç parolası yeterli. Ekip kaydı oluşturursanız kişiyi doğrudan projelere atayabilirsiniz. Davet e-postası gönderilmez.</p></div></div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th>Durum</th><th>Son giriş</th><th class="text-end"><span class="visually-hidden">İşlemler</span></th></tr></thead>
+      <tbody>
+        <% for (const r of rows) { %>
+          <tr>
+            <td class="fw-semibold"><%= r.name || '—' %><% if (r.id === account.id) { %> <span class="badge text-bg-light border">sen</span><% } %></td>
+            <td><%= r.email %><% if (r.email === adminEmail) { %> <span class="badge text-bg-light border" title=".env içindeki ADMIN_EMAIL">ADMIN_EMAIL</span><% } %></td>
+            <td><span class="badge <%= r.role === 'admin' ? 'text-bg-primary' : 'text-bg-secondary' %>"><%= (roles.find((x) => x.value === r.role) || {}).label || r.role %></span></td>
+            <td>
+              <% if (!r.active) { %><span class="badge text-bg-dark">Pasif</span>
+              <% } else if (!r.password_hash) { %><span class="badge text-bg-warning">Giriş parolası bekleniyor</span>
+              <% } else { %><span class="badge text-bg-success">Aktif</span><% } %>
+            </td>
+            <td class="small text-secondary"><%= r.last_login_at ? h.formatDateTime(r.last_login_at) : '—' %></td>
+            <td class="text-end text-nowrap">
+              <% if(r.id!==account.id) { %><a class="btn btn-sm btn-outline-secondary" href="/users/<%= r.id %>/edit#password-management" title="Başlangıç parolasını yenile" aria-label="Başlangıç parolasını yenile"><i class="bi bi-key"></i></a><% } %>
+              <a class="btn btn-sm btn-outline-secondary" href="/users/<%= r.id %>/edit" title="Düzenle" aria-label="Düzenle"><i class="bi bi-pencil"></i></a>
+              <% if (r.id !== account.id) { %>
+                <form method="post" action="/users/<%= r.id %>/delete" class="d-inline" data-confirm="<%= r.email %> silinsin mi?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-sm btn-outline-danger" type="submit" title="Sil" aria-label="Sil"><i class="bi bi-trash"></i></button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/footer') %>

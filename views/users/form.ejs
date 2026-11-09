@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb small mb-1">
+      <li class="breadcrumb-item"><a href="/users">Kullanıcılar</a></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= mode === 'create' ? 'Yeni' : 'Düzenle' %></li>
+    </ol></nav>
+    <h1 class="h3 mb-0"><i class="bi bi-person-gear me-2 text-primary"></i><%= title %></h1>
+  </div>
+</div>
+<form method="post" action="<%= mode === 'create' ? '/users' : `/users/${id}` %>" class="entity-form" novalidate>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <section class="form-section card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="f_email">E-posta <span class="text-danger">*</span></label>
+          <input class="form-control <%= errors.email ? 'is-invalid' : '' %>" id="f_email" name="email" type="email" value="<%= values.email %>" maxlength="254" required autocomplete="off">
+          <% if (errors.email) { %><div class="invalid-feedback d-block"><%= errors.email %></div><% } %>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="f_name">Ad soyad</label>
+          <input class="form-control" id="f_name" name="name" value="<%= values.name || '' %>" maxlength="100" autocomplete="off">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="f_role">Rol</label>
+          <select class="form-select <%= errors.role ? 'is-invalid' : '' %>" id="f_role" name="role">
+            <% for (const r of roles) { %><option value="<%= r.value %>" <%= values.role === r.value ? 'selected' : '' %>><%= r.label %></option><% } %>
+          </select>
+          <div class="form-text">Yönetici: şirket ayarları, kullanıcılar ve tüm projeler. Kullanıcı: atandığı projeleri düzenler; aynı iş rolündeki projeleri görüntüleyebilir. İş rolü ayrıca ekip kaydından belirlenir.</div>
+          <% if (errors.role) { %><div class="invalid-feedback d-block"><%= errors.role %></div><% } %>
+        </div>
+        <% if (mode === 'edit') { %>
+          <div class="col-12 col-md-6">
+            <div class="form-check form-switch mt-md-4 pt-md-2">
+              <input type="hidden" name="active" value="0">
+              <input class="form-check-input" type="checkbox" role="switch" id="f_active" name="active" value="1" <%= Number(values.active) ? 'checked' : '' %>>
+              <label class="form-check-label" for="f_active">Hesap aktif (kapatılırsa giriş yapamaz)</label>
+            </div>
+          </div>
+        <% } else { %>
+          <input type="hidden" name="active" value="1">
+          <div class="col-12"><p class="small text-secondary">Davet veya e-posta hizmeti gerekmez. Başlangıç parolasını siz belirlersiniz; kullanıcı ilk girişinde değiştirir.</p></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="initial_password">Başlangıç parolası *</label><input class="form-control" id="initial_password" type="password" name="password" autocomplete="new-password" minlength="10" maxlength="200" required aria-describedby="initial-password-help"><div id="initial-password-help" class="form-text">En az 10 karakter. E-posta adresiyle aynı olamaz.</div><% if(errors.password) { %><div class="text-danger small"><%= errors.password %></div><% } %></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="initial_password_confirm">Başlangıç parolası (tekrar) *</label><input class="form-control" id="initial_password_confirm" type="password" name="password_confirm" autocomplete="new-password" required><% if(errors.password_confirm) { %><div class="text-danger small"><%= errors.password_confirm %></div><% } %></div>
+          <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="create_team" value="1" checked><span class="form-check-label">Projelere atayabilmek için ekip kaydı da oluştur</span></label></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="job_role">Ekipteki iş rolü</label><input class="form-control" id="job_role" name="job_role" maxlength="100" placeholder="Örn. Yazılım geliştirici, Tasarımcı"><div class="form-text">Aynı iş rolündeki kişiler birbirlerinin projelerini görebilir. İş rolü yönetici yetkisi vermez.</div></div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+  <div class="form-actions">
+    <a class="btn btn-outline-secondary" href="/users">Vazgeç</a>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i><%= mode === 'create' ? 'Kullanıcıyı oluştur' : 'Kaydet' %></button>
+  </div>
+</form>
+<% if(mode==='edit' && Number(id)!==account.id) { %><section class="card mt-4" id="password-management"><div class="card-body"><h2 class="h5">Başlangıç parolasını yenile</h2><p class="small text-secondary">E-posta gerekmez. Eski oturumlar kapanır; kullanıcı yeni başlangıç parolasıyla giriş yapıp kişisel parolasını belirler.</p><form method="post" action="/users/<%= id %>/temporary-password"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="row g-3"><div class="col-md-6"><label class="form-label" for="reset_initial">Yeni başlangıç parolası</label><input id="reset_initial" class="form-control" type="password" name="password" minlength="10" maxlength="200" autocomplete="new-password" required></div><div class="col-md-6"><label class="form-label" for="reset_confirm">Parola (tekrar)</label><input id="reset_confirm" class="form-control" type="password" name="password_confirm" autocomplete="new-password" required></div></div><% if(errors.password) { %><p class="text-danger small mt-2" role="alert"><%= errors.password %></p><% } %><button class="btn btn-outline-primary mt-3" type="submit">Başlangıç parolasını yenile</button></form></div></section><% } %>
+<%- include('../partials/footer') %>
