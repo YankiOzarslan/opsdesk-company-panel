@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1 class="h3 mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>Hesabım</h1>
+    <div class="small text-secondary"><%= account.email %> · <%= account.role === 'admin' ? 'Yönetici' : 'Kullanıcı' %></div>
+  </div>
+</div>
+<% if(locals.mustChangePassword) { %><div class="alert alert-info" role="status">İlk girişiniz: devam etmek için aşağıdan başlangıç parolanızı size özel yeni bir parolayla değiştirin.</div><% } %>
+<div class="row g-3">
+  <div class="col-12 col-xl-6">
+    <form class="card form-section" method="post" action="/account">
+      <div class="card-body">
+        <h2 class="form-section-title"><span class="form-section-num">1</span>Bilgiler</h2>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="mb-3">
+          <label class="form-label" for="f_email">E-posta</label>
+          <input class="form-control" id="f_email" value="<%= account.email %>" disabled>
+          <div class="form-text">E-posta adresini yalnızca yönetici değiştirebilir.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="f_name">Ad soyad</label>
+          <input class="form-control" id="f_name" name="name" value="<%= name %>" maxlength="100">
+        </div>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i>Kaydet</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-12 col-xl-6">
+    <form class="card form-section" method="post" action="/account/password" novalidate>
+      <div class="card-body">
+        <h2 class="form-section-title"><span class="form-section-num">2</span>Parola değiştir</h2>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="email" name="username" value="<%= account.email %>" autocomplete="username" hidden>
+        <% for (const [n, label, ac] of [['current_password', 'Mevcut parola', 'current-password'], ['password', 'Yeni parola', 'new-password'], ['password_confirm', 'Yeni parola (tekrar)', 'new-password']]) { %>
+          <div class="mb-3">
+            <label class="form-label" for="f_<%= n %>"><%= label %></label>
+            <input class="form-control <%= errors[n] ? 'is-invalid' : '' %>" id="f_<%= n %>" name="<%= n %>" type="password" autocomplete="<%= ac %>" required>
+            <% if (errors[n]) { %><div class="invalid-feedback d-block"><%= errors[n] %></div><% } else if (n === 'password') { %><div class="form-text">En az 10 karakter. Değiştirince diğer cihazlardaki oturumların kapanır.</div><% } %>
+          </div>
+        <% } %>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-key me-1"></i>Parolayı değiştir</button>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('partials/footer') %>

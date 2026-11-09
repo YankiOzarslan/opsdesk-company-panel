@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+<% const hasFilter = Object.keys(applied).length > 0; const actionOpts = [{ value: 'create', label: 'Oluşturma' }, { value: 'update', label: 'Güncelleme' }, { value: 'delete', label: 'Silme' }, { value: 'reveal', label: 'Erişim bilgisini açma' }]; %>
+<div class="page-head">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-clock-history me-2 text-primary"></i>Değişiklik kaydı</h1>
+    <p class="text-secondary mb-0">Kim, ne zaman, neyi değiştirdi — <%= total %> kayıt</p>
+  </div>
+</div>
+<form class="card filter-bar mb-3" method="get" action="/audit">
+  <div class="card-body row g-2 align-items-end">
+    <div class="col-12 col-md">
+      <label class="form-label small text-secondary mb-1" for="q">Ara</label>
+      <input class="form-control" id="q" type="search" name="q" value="<%= applied.q || '' %>" placeholder="Kayıt adı, alan, değer…">
+    </div>
+    <div class="col-6 col-md-auto">
+      <label class="form-label small text-secondary mb-1" for="entity_type">Varlık</label>
+      <select class="form-select auto-submit" id="entity_type" name="entity_type">
+        <option value="">Tümü</option>
+        <% for (const e of Object.values(entities)) { %><option value="<%= e.key %>" <%= applied.entity_type === e.key ? 'selected' : '' %>><%= e.plural %></option><% } %>
+      </select>
+    </div>
+    <div class="col-6 col-md-auto">
+      <label class="form-label small text-secondary mb-1" for="action">İşlem</label>
+      <select class="form-select auto-submit" id="action" name="action">
+        <option value="">Tümü</option>
+        <% for (const o of actionOpts) { %><option value="<%= o.value %>" <%= applied.action === o.value ? 'selected' : '' %>><%= o.label %></option><% } %>
+      </select>
+    </div>
+    <div class="col-6 col-md-auto">
+      <label class="form-label small text-secondary mb-1" for="changed_by">Kullanıcı</label>
+      <select class="form-select auto-submit" id="changed_by" name="changed_by">
+        <option value="">Tümü</option>
+        <% for (const u of users) { %><option value="<%= u %>" <%= applied.changed_by === u ? 'selected' : '' %>><%= u %></option><% } %>
+      </select>
+    </div>
+    <div class="col-12 col-md-auto d-flex gap-2">
+      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel me-1"></i>Filtrele</button>
+      <% if (hasFilter) { %><a class="btn btn-link" href="/audit">Temizle</a><% } %>
+    </div>
+  </div>
+</form>
+<div class="card">
+  <% if (!rows.length) { %>
+    <div class="card-body"><%- include('partials/empty', { icon: 'bi-clock-history', heading: hasFilter ? 'Sonuç bulunamadı' : 'Henüz değişiklik yok', text: hasFilter ? 'Filtreleri değiştirin.' : 'Kayıt ekledikçe, güncelledikçe ve sildikçe burada görünür.', href: null }) %></div>
+  <% } else { %>
+    <ul class="list-group list-group-flush">
+      <% for (const a of rows) { %><%- include('partials/audit-item', { a, compact: false }) %><% } %>
+    </ul>
+  <% } %>
+</div>
+<% if (pages > 1) { %>
+  <nav class="mt-3" aria-label="Sayfalar">
+    <ul class="pagination justify-content-center">
+      <li class="page-item <%= page <= 1 ? 'disabled' : '' %>"><a class="page-link" href="<%= h.qs('/audit', { ...applied, page: page - 1 }) %>">Önceki</a></li>
+      <li class="page-item disabled"><span class="page-link"><%= page %> / <%= pages %></span></li>
+      <li class="page-item <%= page >= pages ? 'disabled' : '' %>"><a class="page-link" href="<%= h.qs('/audit', { ...applied, page: page + 1 }) %>">Sonraki</a></li>
+    </ul>
+  </nav>
+<% } %>
+<%- include('partials/footer') %>

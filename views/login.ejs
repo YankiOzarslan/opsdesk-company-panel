@@ -1,0 +1,31 @@
+<%- include('partials/head') %>
+<body class="login-body">
+  <div class="login-shell"><section class="login-intro"><span class="eyebrow">ŞİRKETİNİZİN ORTAK ÇALIŞMA ALANI</span><h2>İşleriniz bir arada.<br>Başlamak kolay.</h2><p>Projeler, domainler, sunucular ve ekip sorumluluklarını tek yerde takip edin.</p><ul><li><i class="bi bi-kanban"></i>Projelerinizi ve sorumlularını görün</li><li><i class="bi bi-shield-check"></i>Yenileme ve yedek uyarılarını izleyin</li><li><i class="bi bi-search"></i>İhtiyacınız olan kaydı hızlıca bulun</li></ul></section><main class="login-card card shadow-sm">
+    <div class="card-body p-4 p-md-5">
+      <div class="text-center mb-4">
+        <span class="brand-mark brand-mark-lg"><i class="bi bi-grid-1x2-fill"></i></span>
+        <h1 class="h4 mt-3 mb-1"><%= company.name ? company.name+' · Giriş' : 'OpsDesk’a hoş geldiniz.' %></h1>
+        <p class="text-secondary small mb-0">Şirket hesabınızla güvenli giriş yapın.</p>
+      </div>
+      <% for (const f of flash) { %><div class="alert alert-<%= f.type %> py-2"><%= f.message %></div><% } %>
+      <% if (error) { %><div class="alert alert-danger py-2 d-flex gap-2 align-items-center"><i class="bi bi-exclamation-octagon"></i><%= error %></div><% } %>
+      <form method="post" action="/login" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="next" value="<%= next %>">
+        <div class="mb-3">
+          <label class="form-label" for="email">E-posta</label>
+          <input class="form-control" id="email" name="email" type="email" value="<%= email %>" autocomplete="username" required autofocus>
+        </div>
+        <div class="mb-4">
+          <div class="d-flex justify-content-between"><label class="form-label" for="password">Parola</label><a class="small" href="/forgot-password">Parolamı unuttum</a></div>
+          <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary w-100" type="submit"><i class="bi bi-box-arrow-in-right me-1"></i>Giriş yap</button>
+      </form>
+      <div class="login-first-use"><strong>İlk girişiniz mi?</strong><p>Şirket yöneticinizin verdiği e-posta ve başlangıç parolasıyla giriş yapın. Sonraki adımda kendi parolanızı belirleyeceksiniz.</p><small>Hesabınız yoksa şirket yöneticinizden kullanıcı hesabı açmasını isteyin.</small></div>
+    </div>
+  </main>
+</div>
+<script src="/static/js/access.js"></script>
+</body>
+</html>
