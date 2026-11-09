@@ -1,0 +1,37 @@
+<%
+  const actions = { create: ['Oluşturdu', 'text-bg-success', 'bi-plus-circle'], update: ['Güncelledi', 'text-bg-primary', 'bi-pencil'], reveal: ['Erişim bilgisini açtı', 'text-bg-secondary', 'bi-eye'], delete: ['Sildi', 'text-bg-danger', 'bi-trash'] };
+  const [aLabel, aCls, aIcon] = actions[a.action] || [a.action, 'text-bg-secondary', 'bi-dot'];
+  const ent = entities[a.entity_type];
+  const exists = ent && a.action !== 'delete';
+  const showEntity = locals.showEntity !== false;
+  const compact = !!locals.compact;
+%>
+<li class="list-group-item audit-item">
+  <div class="d-flex gap-2 align-items-start">
+    <span class="badge <%= aCls %> mt-1"><i class="bi <%= aIcon %>"></i></span>
+    <div class="flex-grow-1 min-w-0">
+      <div class="small">
+        <strong><%= a.changed_by || 'sistem' %></strong> <%= aLabel.toLocaleLowerCase('tr-TR') %>
+        <% if (showEntity) { %>
+          · <span class="text-secondary"><%= ent ? ent.singular : a.entity_type %></span>
+          <% if (exists) { %><a href="/<%= a.entity_type %>/<%= a.entity_id %>"><%= a.entity_name || '#' + a.entity_id %></a><% } else { %><span><%= a.entity_name || '#' + a.entity_id %></span><% } %>
+        <% } %>
+      </div>
+      <% if (a.action === 'update' && a.field) { %>
+        <div class="small diff">
+          <span class="diff-field"><%= h.fieldLabel(a.entity_type, a.field) %>:</span>
+          <del><%= h.auditValue(a.entity_type, a.field, a.old_value, lk) %></del>
+          <i class="bi bi-arrow-right text-secondary"></i>
+          <ins><%= h.auditValue(a.entity_type, a.field, a.new_value, lk) %></ins>
+        </div>
+      <% } else if (!compact && (a.new_value || a.old_value)) { const snap = h.snapshotSummary(a.entity_type, a.new_value || a.old_value, lk); %>
+        <% if (snap.length) { %>
+          <details class="small mt-1"><summary class="text-secondary"><%= snap.length %> alan</summary>
+            <dl class="row mb-0 mt-1"><% for (const s of snap) { %><dt class="col-sm-4 fw-normal text-secondary"><%= s.label %></dt><dd class="col-sm-8 mb-1 pre-wrap"><%= s.value %></dd><% } %></dl>
+          </details>
+        <% } %>
+      <% } %>
+      <div class="text-secondary tiny"><%= h.formatDateTime(a.changed_at) %></div>
+    </div>
+  </div>
+</li>

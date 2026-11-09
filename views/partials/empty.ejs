@@ -1,0 +1,8 @@
+<div class="empty-state">
+  <div class="empty-icon"><i class="bi <%= icon %>"></i></div>
+  <h3><%= heading %></h3>
+  <p class="text-secondary"><%= text %></p>
+  <% if (typeof href !== 'undefined' && href) { %>
+    <a class="btn btn-primary" href="<%= href %>"><i class="bi bi-plus-lg me-1"></i><%= cta %></a>
+  <% } %>
+</div>

@@ -1,0 +1,8 @@
+<% if(pagination.pages>1) { const first=Math.max(1,pagination.page-2),last=Math.min(pagination.pages,pagination.page+2); %>
+<nav class="list-pagination" aria-label="Kayıt sayfaları"><span><%= pagination.page %> / <%= pagination.pages %> sayfa</span><div>
+<% if(pagination.page>1) { %><a class="btn btn-sm btn-outline-secondary" href="<%= h.qs(base,{...params,page:pagination.page-1}) %>" rel="prev">Önceki</a><% } %>
+<% if(first>1) { %><a class="btn btn-sm btn-outline-secondary" href="<%= h.qs(base,{...params,page:1}) %>">1</a><% if(first>2) { %><span>…</span><% } %><% } %>
+<% for(let page=first;page<=last;page++) { %><a class="btn btn-sm <%= page===pagination.page?'btn-primary':'btn-outline-secondary' %>" href="<%= h.qs(base,{...params,page}) %>" <%= page===pagination.page?'aria-current=page':'' %>><%= page %></a><% } %>
+<% if(last<pagination.pages) { %><% if(last<pagination.pages-1) { %><span>…</span><% } %><a class="btn btn-sm btn-outline-secondary" href="<%= h.qs(base,{...params,page:pagination.pages}) %>"><%= pagination.pages %></a><% } %>
+<% if(pagination.page<pagination.pages) { %><a class="btn btn-sm btn-outline-secondary" href="<%= h.qs(base,{...params,page:pagination.page+1}) %>" rel="next">Sonraki</a><% } %>
+</div></nav><% } %>

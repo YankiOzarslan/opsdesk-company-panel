@@ -1,0 +1,11 @@
+<% /* locals: entity, values, errors, lk, datalists, sectionList */ %>
+<% sectionList.forEach((s, i) => { const fields = entity.fields.filter((f) => f.section === s && !f.hidden); %>
+  <section class="form-section card mb-3" data-section="<%= i %>">
+    <div class="card-body">
+      <h2 class="form-section-title"><span class="form-section-num"><%= i + 1 %></span><%= s %></h2>
+      <div class="row g-3">
+        <% for (const f of fields) { %><%- include('field', { f, values, errors, lk, datalists }) %><% } %>
+      </div>
+    </div>
+  </section>
+<% }) %>

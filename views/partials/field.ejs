@@ -1,0 +1,61 @@
+<%
+  /* locals: f, values, errors, lk, datalists */
+  const v = values[f.name];
+  const err = errors[f.name];
+  const id = 'f_' + f.name;
+  const col = f.type === 'textarea' ? 'col-12' : (f.type === 'bool' ? 'col-12 col-md-6' : 'col-12 col-md-6');
+%>
+<div class="<%= col %>">
+  <% if (f.secret) { %>
+    <label class="form-label" for="<%= id %>"><%= f.label %> <i class="bi bi-lock small" title="Şifreli saklanır"></i></label>
+    <% if (locals.canSecrets) { %>
+      <input type="password" class="form-control <%= err ? 'is-invalid' : '' %>" id="<%= id %>" name="<%= f.name %>" value="" autocomplete="new-password" maxlength="<%= f.max || 500 %>" data-sensitive="true" placeholder="<%= locals.hasSecrets?.[f.name] ? 'Kayıtlı · değiştirmek için yeni değeri yazın' : 'Şifreli saklanacak erişim bilgisi' %>">
+      <% if (locals.hasSecrets?.[f.name]) { %><label class="small text-secondary mt-2"><input type="checkbox" name="_clear_<%= f.name %>" value="1"> Kayıtlı bilgiyi kaldır</label><% } %>
+      <div class="form-text">Boş bırakırsanız kayıtlı bilgi korunur. Kayıttan sonra yetkili kişiler detay sayfasından açabilir.</div>
+    <% } else { %><div class="form-control bg-light text-secondary">Erişim bilgisi · yetki gerekli</div><% } %>
+    <% if(err) { %><div class="invalid-feedback d-block"><%= err %></div><% } %>
+  <% } else if (f.type === 'multi_fk') { %>
+    <label class="form-label" for="<%= id %>"><%= f.label %></label>
+    <% const selected = Array.isArray(v) ? v.map(String) : []; %>
+    <div class="border rounded p-3" id="<%= id %>">
+      <% if(!lk[f.ref].list.length) { %><span class="small text-secondary">Önce ekip üyesi ekleyin.</span><% } %>
+      <% for(const member of lk[f.ref].list) { %><label class="d-flex gap-2 align-items-center small py-1"><input type="checkbox" name="<%= f.name %>" value="<%= member.id %>" <%= selected.includes(String(member.id)) ? 'checked' : '' %> <%= account.role !== 'admin' ? 'disabled' : '' %>><%= member.name %></label><% } %>
+    </div>
+    <% if(account.role !== 'admin') { %><div class="form-text">Atamaları yönetici düzenler; aynı iş rolündeki ekip üyeleri projeyi görüntüleyebilir.</div><% } %>
+    <% if(err) { %><div class="invalid-feedback d-block"><%= err %></div><% } %>
+  <% } else if (f.type === 'bool') { %>
+    <div class="form-check form-switch mt-md-4 pt-md-2">
+      <input class="form-check-input <%= err ? 'is-invalid' : '' %>" type="checkbox" role="switch" id="<%= id %>" name="<%= f.name %>" value="1" <%= Number(v) ? 'checked' : '' %>>
+      <label class="form-check-label" for="<%= id %>"><%= f.label %></label>
+    </div>
+  <% } else { %>
+    <label class="form-label" for="<%= id %>"><%= f.label %><% if (f.required) { %> <span class="text-danger">*</span><% } %></label>
+    <% if (f.type === 'textarea') { %>
+      <textarea class="form-control <%= err ? 'is-invalid' : '' %>" id="<%= id %>" name="<%= f.name %>" rows="<%= f.rows || 3 %>" placeholder="<%= f.placeholder || '' %>"><%= v === null || v === undefined ? '' : v %></textarea>
+    <% } else if (f.type === 'select' || f.type === 'fk') {
+         const opts = f.type === 'fk' ? lk[f.ref].list.map((r) => ({ value: r.id, label: r.name })) : f.options; %>
+      <div class="<%= f.type === 'fk' ? 'input-group' : '' %>">
+        <select class="form-select <%= err ? 'is-invalid' : '' %>" id="<%= id %>" name="<%= f.name %>">
+          <option value="">— Seçilmedi —</option>
+          <% for (const o of opts) { %>
+            <option value="<%= o.value %>" <%= v !== null && v !== undefined && String(o.value) === String(v) ? 'selected' : '' %>><%= o.label %></option>
+          <% } %>
+        </select>
+        <% if (f.type === 'fk') { %>
+          <a class="btn btn-outline-secondary" href="/<%= f.ref %>/new" target="_blank" rel="noopener" title="Yeni kayıt (yeni sekmede)"><i class="bi bi-plus-lg"></i></a>
+        <% } %>
+      </div>
+      <% if (f.type === 'fk' && !opts.length) { %><div class="form-text">Henüz kayıt yok — <a href="/<%= f.ref %>/new" target="_blank" rel="noopener">yeni ekle</a>.</div><% } %>
+    <% } else {
+         const type = { email: 'email', tel: 'tel', url: 'text', date: 'date' }[f.type] || 'text'; %>
+      <input class="form-control <%= err ? 'is-invalid' : '' %>" type="<%= type %>" id="<%= id %>" name="<%= f.name %>"
+        value="<%= v === null || v === undefined ? '' : v %>" placeholder="<%= f.placeholder || '' %>"
+        <%= f.required ? 'required' : '' %> <%= f.max ? `maxlength=${f.max}` : '' %>
+        <%= datalists[f.name] ? `list=dl_${f.name}` : '' %> autocomplete="off">
+      <% if (datalists[f.name]) { %>
+        <datalist id="dl_<%= f.name %>"><% for (const s of datalists[f.name]) { %><% const so = typeof s === 'object' ? s : { value: s }; %><option value="<%= so.value %>"<% if (so.label) { %> label="<%= so.label %>"<% } %>><% } %></datalist>
+      <% } %>
+    <% } %>
+    <% if (err) { %><div class="invalid-feedback d-block"><%= err %></div><% } %>
+  <% } %>
+</div>

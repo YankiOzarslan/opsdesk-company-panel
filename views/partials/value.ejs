@@ -1,0 +1,11 @@
+<% /* locals: d (display object) */ %>
+<% if (d.empty) { %><span class="text-body-tertiary">—</span>
+<% } else if (d.color) { %><span class="badge text-bg-<%= d.color %>"><%= d.text %></span>
+<% } else if (d.bool !== undefined) { %><span class="badge <%= d.bool ? 'text-bg-success' : 'text-bg-secondary' %>"><%= d.text %></span>
+<% } else if (d.href && d.external) { %><a href="<%= d.href %>" target="_blank" rel="noopener noreferrer"><%= d.text %> <i class="bi bi-box-arrow-up-right small"></i></a>
+<% } else if (d.href) { %><a href="<%= d.href %>"><%= d.text %></a>
+<% } else if (d.muted) { %><span class="text-body-tertiary"><%= d.text %></span>
+<% } else if (d.expiry) { %><%= d.text %> <span class="badge <%= d.expiry.cls %> ms-1"><%= d.expiry.text %></span>
+<% } else if (d.multiline) { %><span class="pre-wrap"><%= d.text %></span>
+<% } else if (d.mono) { %><code><%= d.text %></code>
+<% } else { %><%= d.text %><% } %>

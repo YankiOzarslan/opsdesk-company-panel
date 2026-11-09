@@ -1,0 +1,73 @@
+<%- include('head') %>
+<%
+  const nav = [
+    { key: 'dashboard', href: '/', label: 'Genel bakış', icon: 'bi-speedometer2' },
+    { key: 'projects', href: '/projects', label: 'Projeler', icon: 'bi-kanban' },
+    { key: 'domains', href: '/domains', label: 'Domainler', icon: 'bi-globe2' },
+    { key: 'servers', href: '/servers', label: 'Sunucular', icon: 'bi-hdd-rack' },
+    { key: 'clients', href: '/clients', label: 'Müşteriler', icon: 'bi-briefcase' },
+    { key: 'contacts', href: '/contacts', label: 'İletişim rehberi', icon: 'bi-person-lines-fill' },
+    { key: 'team', href: '/team', label: 'Ekip', icon: 'bi-people' },
+  ];
+  const sys = [
+    {key:'help',href:'/help',label:'Yardım ve kullanım',icon:'bi-question-circle'},
+    ...(locals.account?.role==='admin'?[{key:'company',href:'/company',label:'Şirket ayarları',icon:'bi-building'}]:[]),
+    { key: 'audit', href: '/audit', label: 'Değişiklik kaydı', icon: 'bi-clock-history' },
+    ...(locals.account?.role === 'admin' ? [{ key: 'system', href: '/system', label: 'Sistem durumu', icon: 'bi-activity' },{ key: 'backups', href: '/backups', label: 'Yedekler', icon: 'bi-database-down' }] : []),
+    ...(locals.account && locals.account.role === 'admin' ? [{ key: 'categories', href: '/technology-categories', label: 'Teknoloji kategorileri', icon: 'bi-grid' }, { key: 'users', href: '/users', label: 'Kullanıcılar', icon: 'bi-person-gear' }] : []),
+  ];
+  const act = typeof active !== 'undefined' ? active : '';
+%>
+<body class="app-body">
+<div class="app-shell">
+  <aside class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+    <div class="offcanvas-header sidebar-brand">
+      <a href="/" class="brand" id="sidebarLabel"><span class="brand-mark"><i class="bi bi-grid-1x2-fill"></i></span><span class="brand-word">opsdesk<span class="brand-caption">DİJİTAL ÇALIŞMA ALANI</span></span></a>
+      <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Kapat"></button>
+    </div>
+    <div class="offcanvas-body flex-column p-0">
+      <div class="workspace-label"><span class="workspace-icon">O</span><div><%= company.name || 'Example Company' %><small>Şirket çalışma alanı</small></div><i class="bi bi-chevron-expand ms-auto"></i></div>
+      <nav class="nav flex-column sidebar-nav" aria-label="Ana menü">
+        <div class="sidebar-heading">Çalışma alanı</div>
+        <% for (const n of nav) { %>
+          <a class="nav-link <%= act === n.key ? 'active' : '' %>" href="<%= n.href %>" <%= act === n.key ? 'aria-current=page' : '' %>><i class="bi <%= n.icon %>"></i><span><%= n.label %></span></a>
+        <% } %>
+        <div class="sidebar-heading">Sistem</div>
+        <% for (const n of sys.filter(n=>n.key !== 'backups' || account.role === 'admin')) { %>
+          <a class="nav-link <%= act === n.key ? 'active' : '' %>" href="<%= n.href %>"><i class="bi <%= n.icon %>"></i><span><%= n.label %></span></a>
+        <% } %>
+      </nav>
+      <div class="sidebar-foot"><div class="sidebar-note"><i class="bi bi-lightning-charge"></i><strong>Birlikte, daha düzenli.</strong><span>Projeleriniz ve ekibiniz aynı yerde.</span><a href="/team">Ekibi görüntüle <i class="bi bi-arrow-up-right"></i></a></div><a class="sidebar-account" href="/account"><span class="avatar avatar-sm"><%= h.initials(user) %></span><span><%= user %><small><%= locals.account && account.role === 'admin' ? 'Yönetici' : 'Ekip üyesi' %></small></span><i class="bi bi-gear ms-auto"></i></a></div>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button class="btn btn-light d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Menü"><i class="bi bi-list"></i></button>
+      <div class="topbar-title text-truncate"><span class="topbar-company">Çalışma alanı <i class="bi bi-chevron-right"></i></span><%= act === 'dashboard' ? 'Genel bakış' : title %></div>
+      <form class="topbar-search d-none d-md-flex" method="get" action="/search" role="search">
+        <i class="bi bi-search"></i>
+        <input class="form-control form-control-sm" type="search" name="q" id="project-search" placeholder="Tüm kayıtlarda ara…" aria-label="Tüm kayıtlarda ara">
+      <kbd class="search-shortcut">/</kbd></form>
+      <a class="btn btn-light btn-sm d-md-none" href="/search" aria-label="Tüm kayıtlarda ara"><i class="bi bi-search" aria-hidden="true"></i></a>
+      <div class="dropdown quick-create"><button class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-2">Yeni kayıt</span></button><ul class="dropdown-menu dropdown-menu-end"><li><h6 class="dropdown-header">NE EKLEMEK İSTERSİN?</h6></li><% for (const k of ['projects', 'domains', 'servers', 'clients', 'contacts', ...(account?.role==='admin'?['team']:[])]) { const e = entities[k]; %><li><a class="dropdown-item" href="/<%= k %>/new"><i class="bi <%= e.icon %> me-2"></i><%= e.singular %></a></li><% } %></ul></div>
+      <div class="dropdown">
+        <button aria-label="Hesap menüsü" class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="avatar avatar-sm"><%= h.initials(user) %></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <% if (locals.account) { %><li><h6 class="dropdown-header"><%= account.email %></h6></li><% } %>
+          <li><a class="dropdown-item" href="/account"><i class="bi bi-person-circle me-2"></i>Hesabım / parola değiştir</a></li>
+          <li><a class="dropdown-item" href="/audit?changed_by=<%= encodeURIComponent(locals.account ? account.email : user) %>"><i class="bi bi-clock-history me-2"></i>Değişikliklerim</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form method="post" action="/logout">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Çıkış yap</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </header>
+    <main class="content">
+      <%- include('flash') %>

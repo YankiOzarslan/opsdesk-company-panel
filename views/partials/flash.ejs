@@ -1,0 +1,7 @@
+<% const icons = { success: 'bi-check-circle', danger: 'bi-exclamation-octagon', warning: 'bi-exclamation-triangle', info: 'bi-info-circle' }; %>
+<% for (const f of flash) { %>
+  <div class="alert alert-<%= f.type %> alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+    <i class="bi <%= icons[f.type] || 'bi-info-circle' %>"></i><div><%= f.message %></div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+  </div>
+<% } %>

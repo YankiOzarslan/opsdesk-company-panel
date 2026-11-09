@@ -1,0 +1,8 @@
+<% const errCount = Object.keys(errors).length; if (errCount) { %>
+  <div class="alert alert-danger d-flex gap-2 align-items-start" role="alert">
+    <i class="bi bi-exclamation-octagon mt-1"></i>
+    <div><strong>Kayıt kaydedilemedi.</strong> <%= errCount %> alanı kontrol edin:
+      <ul class="mb-0 small"><% for (const [k, msg] of Object.entries(errors)) { %><li><%= entity.fieldMap[k] ? entity.fieldMap[k].label : k %>: <%= msg %></li><% } %></ul>
+    </div>
+  </div>
+<% } %>
