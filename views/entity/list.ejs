@@ -1,0 +1,151 @@
+<%- include('../partials/header') %>
+<% const hasFilter = Object.keys(applied).length > 0; %>
+<div class="page-head">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi <%= entity.icon %> me-2 text-primary"></i><%= entity.plural %></h1>
+    <p class="text-secondary mb-0"><%= hasFilter ? `${matched} / ${total} kayıt eşleşti` : `${total} kayıt` %></p>
+  </div>
+  <% if(!['projects','domains','servers'].includes(entity.key) && (entity.key !== 'team' || account.role === 'admin')) { %><a class="btn btn-primary" href="/<%= entity.key %>/new"><i class="bi bi-plus-lg me-1"></i>Yeni <%= entity.singular.toLocaleLowerCase('tr-TR') %></a><% } %>
+</div>
+
+<% if(['projects','domains','servers'].includes(entity.key)) { const createCopy={projects:'Domain, teknoloji ve ekibinizi aynı projede bir araya getirin.',domains:'Site adreslerinizi, DNS ve sertifika bilgilerini tek yerden takip edin.',servers:'Altyapınızı ve sorumlu kişileri düzenli bir envanterde toplayın.'}; %>
+<section class="record-create-panel" aria-label="Yeni <%= entity.singular.toLocaleLowerCase('tr-TR') %> ekle"><div class="record-create-copy"><span class="banner-kicker"><span class="signal-dot"></span>ÇALIŞMA ALANINIZI GENİŞLETİN</span><h2>Yeni <%= entity.singular.toLocaleLowerCase('tr-TR') %> ekleyin.</h2><p><%= createCopy[entity.key] %></p></div><a class="btn record-create-button" href="/<%= entity.key %>/new"><i class="bi bi-plus-lg" aria-hidden="true"></i>Yeni <%= entity.singular.toLocaleLowerCase('tr-TR') %> ekle<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a><i class="bi <%= entity.icon %> record-create-watermark" aria-hidden="true"></i></section>
+<% } %>
+
+<% if(entity.key === 'projects') { %><nav class="nav nav-pills gap-2 mb-3" aria-label="Proje görünümü"><a class="nav-link <%= !applied.scope ? 'active' : '' %>" href="<%= h.qs('/projects', {...applied,scope:null,sort:pagination.sort,per_page:pagination.perPage}) %>">Hepsi</a><a class="nav-link <%= applied.scope === 'mine' ? 'active' : '' %>" href="<%= h.qs('/projects', {...applied,scope:'mine',sort:pagination.sort,per_page:pagination.perPage}) %>"><i class="bi bi-person me-1"></i>Benim projelerim</a></nav><% } %>
+<% if (entity.key === 'domains') { const es = locals.expirySync; %>
+  <div class="d-flex flex-wrap align-items-center gap-1 small text-secondary mb-2">
+    <i class="bi bi-arrow-repeat me-1"></i>
+    <% if (es && es.finishedAt && es.attempted !== undefined) { %>
+      Son kontrol: <%= h.formatDateTime(es.finishedAt) %> · <%= es.attempted %> kayıt. Kayıt tarihi: <%= es.checked %> domain, <%= es.updated.length %> güncellendi · SSL: <%= es.sslChecked %> · DNS: <%= es.dnsChecked %>.
+      <% if(es.failed.length || es.sslFailed?.length || es.dnsFailed?.length) { %><span class="text-warning-emphasis">Bazı bilgiler doğrulanamadı; satırdaki kontrol sonuçlarına bakın.</span><% } %>
+    <% } else if(es && es.finishedAt) { %>
+      Eski kontrol özeti: <%= h.formatDateTime(es.finishedAt) %>. Tüm kayıtları doğrulamak için yeniden kontrol edin.
+    <% } else { %>
+      Henüz canlı doğrulama yapılmadı. Kayıt, DNS ve SSL bilgilerini kontrol edin.
+    <% } %>
+    <form method="post" action="/domains/sync-expiry" class="d-inline">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-link btn-sm p-0 align-baseline" type="submit">Şimdi kontrol et</button>
+    </form>
+  </div>
+<% } %>
+<% if(entity.key === 'domains') { %><p class="domain-check-help">Kayıt tarihi RDAP/WHOIS, DNS ve SSL ayrı doğrulanır. Asıl sahip ve “Biz yönetiyoruz” alanları elle tutulan iç bilgilerdir.</p><% } %>
+<form class="card filter-bar mb-3 <%= entity.key === 'projects' ? 'project-filters' : '' %>" method="get" action="/<%= entity.key %>">
+  <% if(applied.scope) { %><input type="hidden" name="scope" value="<%= applied.scope %>"><% } %>
+  <input type="hidden" name="sort" value="<%= pagination.sort %>"><input type="hidden" name="per_page" value="<%= pagination.perPage %>">
+  <div class="card-body row g-2 align-items-end">
+    <div class="col-12 col-md">
+      <label class="form-label small text-secondary mb-1" for="q">Ara</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" id="q" type="search" name="q" value="<%= applied.q || '' %>" placeholder="<%= entity.key === 'projects' ? 'Proje, domain, teknoloji, ekip…' : 'Ad, not, açıklama…' %>">
+      </div>
+    </div>
+    <% for (const f of entity.filters) { %>
+      <div class="col-6 col-md-auto">
+        <label class="form-label small text-secondary mb-1" for="flt_<%= f.name %>"><%= f.label %></label>
+        <select class="form-select auto-submit" id="flt_<%= f.name %>" name="<%= f.name %>" <%= f.name==='tech_version' && !filterOptions[f.name].length?'disabled':'' %>>
+          <option value=""><%= f.name==='tech_version' && !filterOptions[f.name].length?'Kayıtlı sürüm yok':'Tümü' %></option>
+          <% for (const o of filterOptions[f.name]) { %>
+            <% if (o.options) { %>
+              <optgroup label="<%= o.group %>">
+                <% for (const g of o.options) { %>
+                  <option value="<%= g.value %>" <%= applied[f.name] === String(g.value) ? 'selected' : '' %>><%= g.label %></option>
+                <% } %>
+              </optgroup>
+            <% } else { %>
+              <option value="<%= o.value %>" <%= applied[f.name] === String(o.value) ? 'selected' : '' %>><%= o.label %></option>
+            <% } %>
+          <% } %>
+        </select>
+      </div>
+    <% } %>
+    <div class="col-12 col-md-auto d-flex gap-2">
+      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel me-1"></i>Filtrele</button>
+      <% if (hasFilter) { %><a class="btn btn-link" href="<%= h.qs('/'+entity.key, {scope:applied.scope}) %>">Temizle</a><% } %>
+    </div>
+  </div>
+</form>
+
+<div class="entity-list-options"><span><%= pagination.from %>–<%= pagination.to %> / <%= matched %> kayıt</span><form method="get" action="/<%= entity.key %>"><% for(const [key,value] of Object.entries(applied)) { %><input type="hidden" name="<%= key %>" value="<%= value %>"><% } %><label for="list-sort">Sırala</label><select class="form-select form-select-sm auto-submit" id="list-sort" name="sort"><% for(const option of sortOptions) { %><option value="<%= option.value %>" <%= pagination.sort === option.value ? 'selected' : '' %>><%= option.label %></option><% } %></select><label for="list-per-page">Sayfada</label><select class="form-select form-select-sm auto-submit" id="list-per-page" name="per_page"><% for(const size of [25,50,100]) { %><option value="<%= size %>" <%= pagination.perPage===size?'selected':'' %>><%= size %></option><% } %></select></form></div>
+
+<% if (!rows.length) { %>
+  <div class="card"><div class="card-body">
+    <% if (hasFilter) { %>
+      <%- include('../partials/empty', { icon: 'bi-search', heading: 'Sonuç bulunamadı', text: 'Filtreleri değiştirip tekrar deneyin.', href: null }) %>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: entity.icon, heading: `Henüz ${entity.singular.toLocaleLowerCase('tr-TR')} kaydı yok`, text: 'İlk kaydı ekleyerek başlayın.', href: `/${entity.key}/new`, cta: `Yeni ${entity.singular.toLocaleLowerCase('tr-TR')}` }) %>
+    <% } %>
+  </div></div>
+<% } else if (entity.key === 'projects') { %>
+  <%- include('../projects/list', { rows, entity, lk }) %>
+<% } else if (entity.cards) { %>
+  <div class="row g-3">
+    <% for (const r of rows) { %><%- include('../cards/' + entity.key, { r }) %><% } %>
+  </div>
+<% } else { %>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 <%= entity.key === 'domains' ? 'domain-list-table' : '' %>">
+        <thead>
+          <tr>
+            <% entity.columns.forEach((c, i) => { %><th class="<%= '' %>"><%= entity.fieldMap[c.field].label %></th><% }) %>
+            <th class="text-end <%= entity.key === 'domains' ? 'domain-row-actions' : '' %>"><span class="visually-hidden">İşlemler</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const r of rows) { %>
+            <tr>
+              <% entity.columns.forEach((c, i) => { %>
+                <td class="<%= '' %>">
+                  <% if (c.link && c.external) { %>
+                    <a class="fw-semibold" href="https://<%= r[c.field] %>" target="_blank" rel="noopener noreferrer" title="Siteyi yeni sekmede aç"><%= r[c.field] %> <i class="bi bi-box-arrow-up-right small"></i></a>
+                    <% if(entity.key === 'domains') { %><div class="domain-verification"><%= r.verification && r.verification.name === r.name ? `Kontrol: ${h.formatDateTime(r.verification.checkedAt)}` : 'Henüz doğrulanmadı' %></div><% } %>
+                  <% } else if (c.link) { %>
+                    <a class="fw-semibold" href="/<%= entity.key %>/<%= r.id %>"><%= r[c.field] %></a>
+                  <% } else if (c.format === 'tech') { %>
+                    <% if (r.technology) { %><%= r.technology %> <% if (r.tech_version) { %><span class="badge text-bg-light border"><%= r.tech_version %></span><% } %><% } else { %><span class="text-body-tertiary">—</span><% } %>
+                  <% } else if (c.format === 'mono' && r[c.field]) { %>
+                    <code><%= r[c.field] %></code>
+                  <% } else if(entity.key === 'domains' && c.field === 'expiry_date' && r.parent_domain_id) { %>
+                    <a class="small" href="/domains/<%= r.parent_domain_id %>">Ana domainden takip edilir</a>
+                  <% } else { %>
+                    <%- include('../partials/value', { d: h.display(entity, c.field, r[c.field], lk) }) %>
+                  <% } %>
+                  <% if(entity.key === 'domains') { const check=r.verification?.name === r.name ? r.verification : null; const stale=!check || Date.now()-Date.parse(check.checkedAt)>86400000; const regVerified=check?.registration?.state === 'verified' && check.registration.expiry === r.expiry_date && !stale; const sslVerified=check?.ssl?.state === 'verified' && check.ssl.expiry === r.ssl_expiry && !stale; %>
+                    <% if(c.field === 'expiry_date' && !r.parent_domain_id) { %>
+                      <div class="domain-verification <%= regVerified ? 'is-verified' : 'is-unverified' %>"><%= regVerified ? `${check.registration.source || 'Kayıt kaynağı'} · ${check.registration.expiryType === 'registrar' ? 'registrar bitişi' : 'kayıt bitişi'}` : 'Güncel tarih doğrulanamadı' %></div>
+                      <% if(check?.registration?.sourceUrl && /^https:\/\//.test(check.registration.sourceUrl)) { %><a class="domain-source-link" href="<%= check.registration.sourceUrl %>" target="_blank" rel="noopener noreferrer">Kaynak</a><% } %>
+                      <% if(check?.registration?.registrarExpiry && check.registration.registryExpiry && check.registration.registrarExpiry !== check.registration.registryExpiry) { %><div class="domain-verification">Registry bitişi: <%= h.formatDate(check.registration.registryExpiry) %></div><% } %>
+                    <% } %>
+                    <% if(c.field === 'registrar' && check?.registration?.registrarMismatch) { %><div class="domain-verification is-unverified">Canlı kaynak: <%= check.registration.registrar %>. Elle girilen kayıt farklı.</div><% } %>
+                    <% if(c.field === 'ssl_expiry') { %><div class="domain-verification <%= sslVerified ? 'is-verified' : 'is-unverified' %>"><%= sslVerified ? `Son kontrolde geçerli · ${check.ssl.issuer || ''}` : check?.ssl?.state === 'invalid' ? 'Sertifika geçerlilik kontrolü başarısız' : 'SSL bu kontrolde doğrulanamadı' %></div><% } %>
+                    <% if(c.field === 'dns_managed_by') { %>
+                      <div class="domain-verification <%= check?.dns?.state === 'verified' && !stale ? 'is-verified' : 'is-unverified' %>"><%= check?.dns?.state === 'verified' && !stale ? `DNS çözümlendi · ${(check.dns.ips || []).join(', ')}` : 'DNS bu kontrolde doğrulanamadı' %></div>
+                      <% if(check?.dns?.nameservers?.length) { %><details class="domain-ns-details"><summary>Canlı name server’lar</summary><% for(const ns of check.dns.nameservers) { %><div><%= ns %></div><% } %></details><% } %>
+                    <% } %>
+                  <% } %>
+                </td>
+              <% }) %>
+              <td class="text-end text-nowrap <%= entity.key === 'domains' ? 'domain-row-actions' : '' %>">
+                <div class="<%= entity.key === 'domains' ? 'domain-action-stack' : '' %>">
+                <% if (entity.columns.some((c) => c.external)) { %><a class="btn btn-sm btn-outline-secondary" href="/<%= entity.key %>/<%= r.id %>" title="Detay" aria-label="Detay"><i class="bi bi-eye"></i><% if(entity.key === 'domains') { %><span>Detay</span><% } %></a><% } %>
+                <% if(r.canEdit) { %><a class="btn btn-sm btn-outline-secondary" href="/<%= entity.key %>/<%= r.id %>/edit" title="Düzenle" aria-label="Düzenle"><i class="bi bi-pencil"></i><% if(entity.key === 'domains') { %><span>Düzenle</span><% } %></a><% } %>
+                <% if (entity.key === 'domains' && r.canEdit) { %>
+                  <form method="post" action="/domains/<%= r.id %>/delete" class="d-inline" data-confirm="<%= r.name %> kalıcı olarak silinecek. Bağlı projeler ve alt domainler korunur; yalnızca bu domainle bağlantıları kaldırılır. Silmek istediğinize emin misiniz?">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="<%= r.name %> domainini sil"><i class="bi bi-trash me-1" aria-hidden="true"></i>Sil</button>
+                  </form>
+                <% } %>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+<%- include('../partials/list-pagination',{pagination,params:{...applied,sort:pagination.sort,per_page:pagination.perPage},base:'/'+entity.key}) %>
+<%- include('../partials/footer') %>

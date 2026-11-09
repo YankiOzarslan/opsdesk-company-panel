@@ -1,0 +1,103 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div class="min-w-0">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb small mb-1">
+      <li class="breadcrumb-item"><a href="/<%= entity.key %>"><%= entity.plural %></a></li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page"><%= row.name %></li>
+    </ol></nav>
+    <h1 class="h3 mb-1 text-truncate"><i class="bi <%= entity.icon %> me-2 text-primary"></i><%= row.name %></h1>
+    <div class="small text-secondary">
+      Oluşturma: <%= h.formatDateTime(row.created_at) %><% if (row.created_by) { %> · <%= row.created_by %><% } %>
+      <span class="mx-1">|</span> Son güncelleme: <%= h.formatDateTime(row.updated_at) %><% if (row.updated_by) { %> · <%= row.updated_by %><% } %>
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <% if (entity.key === 'domains') { %><a class="btn btn-outline-primary" href="https://<%= row.name %>" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right me-1"></i>Siteyi aç</a><% } %>
+    <% if (entity.key === 'domains') { %><a class="btn btn-outline-primary" href="/domains/<%= row.id %>/subdomains/new"><i class="bi bi-diagram-3 me-1"></i>Alt domain ekle</a><% } %>
+    <% if(canEdit) { %><a class="btn btn-primary" href="/<%= entity.key %>/<%= row.id %>/edit"><i class="bi bi-pencil me-1"></i>Düzenle</a><% } %>
+    <% if(canDelete) { %><button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash me-1"></i>Sil</button><% } %>
+  </div>
+</div>
+
+<% if (entity.key === 'domains' && row.parent_domain_id) { %>
+<div class="alert alert-info d-flex align-items-center gap-2"><i class="bi bi-diagram-3"></i><span>Bu bir alt domain. Ana domain: <a href="/domains/<%= row.parent_domain_id %>"><%= lk.domains.byId.get(row.parent_domain_id) %></a>. Domain yenilemesi ana domain üzerinden takip edilir.</span></div>
+<% } %>
+<div class="row g-3">
+  <div class="col-12 col-xl-8">
+    <% for (const rel of related) { %>
+      <section class="card mb-3">
+        <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+          <span><i class="bi <%= rel.target.icon %> me-2"></i><%= rel.title %> <span class="badge text-bg-light border"><%= rel.rows.length %></span></span>
+          <% if (rel.fk === 'parent_domain_id') { %><a class="btn btn-sm btn-primary" href="/domains/<%= row.id %>/subdomains/new"><i class="bi bi-plus-lg me-1"></i>Alt domain ekle</a><% } %>
+          <% if (rel.entity === 'projects' && rel.fk) { %><a class="btn btn-sm btn-outline-primary" href="/projects/new?<%= rel.fk %>=<%= row.id %>"><i class="bi bi-plus-lg"></i> Proje ekle</a><% } %>
+        </div>
+        <% if (!rel.rows.length) { %>
+          <div class="card-body small text-secondary">Bağlı kayıt yok.</div>
+        <% } else { %>
+          <ul class="list-group list-group-flush">
+            <% for (const r of rel.rows) { %>
+              <li class="list-group-item d-flex justify-content-between">
+                <a href="/<%= rel.entity %>/<%= r.id %>"><%= r.name %></a>
+                <% if (rel.fk === 'parent_domain_id') { %><a class="btn btn-sm btn-outline-secondary" href="/domains/<%= r.id %>/edit" aria-label="<%= r.name %> kaydını düzenle"><i class="bi bi-pencil"></i></a><% } %>
+                <% if (rel.entity === 'projects') { %><span class="small text-secondary"><%= [r.technology, r.tech_version].filter(Boolean).join(' ') %></span><% } %>
+              </li>
+            <% } %>
+          </ul>
+        <% } %>
+      </section>
+    <% } %>
+
+    <% entity.sections.forEach((s, i) => { const fields = entity.fields.filter((f) => f.section === s && !f.hidden); %>
+      <section class="form-section card mb-3">
+        <div class="card-body">
+          <h2 class="form-section-title"><span class="form-section-num"><%= i + 1 %></span><%= s %></h2>
+          <dl class="row detail-list mb-0">
+            <% for (const f of fields) { %>
+              <dt class="col-sm-4"><%= f.label %></dt>
+              <dd class="col-sm-8"><% if(f.secret) { %><% if(row[f.name]) { %><span class="text-secondary me-2">••••••••</span><% if(canSecrets) { %><button type="button" class="btn btn-sm btn-outline-primary" data-reveal-url="/vault/<%= entity.key %>/<%= row.id %>/<%= f.name %>"><i class="bi bi-eye me-1"></i>Göster</button><% } else { %><span class="small text-secondary">Yetki gerekli</span><% } %><% } else { %><span class="text-secondary">—</span><% } %><% } else { %><%- include('../partials/value', { d: h.display(entity, f.name, row[f.name], lk) }) %><% } %></dd>
+            <% } %>
+          </dl>
+        </div>
+      </section>
+    <% }) %>
+
+
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <section class="card">
+      <div class="card-header d-flex justify-content-between"><span><i class="bi bi-clock-history me-2"></i>Değişiklik geçmişi</span><a class="small" href="/audit?entity_type=<%= entity.key %>&q=<%= encodeURIComponent(row.name) %>">Tümü</a></div>
+      <% if (!history.length) { %>
+        <div class="card-body small text-secondary">Kayıt yok.</div>
+      <% } else { %>
+        <ul class="list-group list-group-flush">
+          <% for (const a of history) { %><%- include('../partials/audit-item', { a, compact: false, showEntity: false }) %><% } %>
+        </ul>
+      <% } %>
+    </section>
+  </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="/<%= entity.key %>/<%= row.id %>/delete">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="deleteModalLabel">Kaydı sil</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong><%= row.name %></strong> kalıcı olarak silinecek.</p>
+        <% const relCount = related.reduce((n, r) => n + r.rows.length, 0); if (relCount) { %>
+          <div class="alert alert-warning small mb-0"><%= relCount %> bağlı kayıttaki referans boşaltılacak (kayıtların kendisi silinmez).</div>
+        <% } %>
+        <p class="small text-secondary mb-0 mt-2">Silme işlemi değişiklik kaydına yazılır.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+        <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Sil</button>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>
